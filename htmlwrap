@@ -1,0 +1,63 @@
+#!/bin/sh
+# by Dominik Stanisław Suchora <suchora.dominik7@gmail.com>
+# License: GNU GPLv3
+
+usage() {
+    NAME="$(basename "$0")"
+    printf "%s [OPTION]... [FILE]...\nWrap FILE into html\n\n" "$NAME"
+    printf "Options:\n  -c,  --charset CHARSET\tspecify charset\n"
+    printf "  -t,  --title TITLE\t\tspecify TITLE\n"
+    printf "  -d,  --description DESC\tspecify description\n"
+    printf "  -C,  --compatibility\t\tmake html compatible with most browsers\n"
+    printf "  -k,  --keywords KEYWORDS\tspecify keywords\n"
+    printf "  -i,  --icon ICON\t\tspecify icon\n"
+    printf "  -s,  --style FILE\t\tadd css file\n"
+    printf "  -S,  --script FILE\t\tadd javascript file\n"
+    printf "  -h,  --help\t\t\tshow help\n"
+    printf "\nWhen FILE isn't specified, FILE will become standard input.\n"
+}
+
+CHARSET="utf-8"
+
+while [ $# -gt 0 ]
+do
+    case "$1" in
+        -h|--help) usage; exit 0;;
+        -c|--charset) CHARSET="$2"; shift;;
+        -t|--title) TITLE="$2"; shift;;
+        -d|--description) DESCRIPTION="$2"; shift;;
+        -C|--compatibility) COMPATIBILITY=1;;
+        -k|--keywords) KEYWORDS="$2"; shift;;
+        -i|--icon) ICON="$2"; shift;;
+        -s|--style) STYLES="$STYLES $2"; shift;;
+        -S|--script) SCRIPTS="$SCRIPTS $2"; shift;;
+        *) FILES="$FILES $1";;
+    esac
+    shift;
+done
+
+echo '<!DOCTYPE HTML>'
+echo '<html><head>'
+[ -n "$TITLE" ] && echo "<title>$TITLE</title>"
+echo "<meta charset=\"$CHARSET\" />"
+[ -n "$DESCRIPTION" ] && echo "<meta name=\"description\" content=\"$DESCRIPTION\" />"
+[ -n "$COMPATIBILITY" ] && echo '<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />'
+[ -n "$KEYWORDS" ] && echo "<meta name=\"keywords\" content=\"$KEYWORDS\" />"
+[ -n "$ICON" ] && echo "<meta rel=\"shortcut icon\" href=\"$ICON\" type=\"image/x-icon\" />"
+if [ -n "$STYLES" ]
+then
+    for i in $(echo "$STYLES" | tr ' ' '\n')
+    do
+        echo "<link type=\"text/css\" rel=\"stylesheet\" href=\"$i\" />"
+    done
+fi
+if [ -n "$SCRIPTS" ]
+then
+    for i in $(echo "$SCRIPTS" | tr ' ' '\n')
+    do
+        echo "<script type=\"text/javascript\" src=\"$i\"></script>"
+    done
+fi
+echo '</head><body>'
+[ -n "$FILES" ] && eval 'cat $FILES' || cat /dev/stdin
+echo '</body></html>'
